@@ -1,23 +1,61 @@
 import { useState } from "react";
 import classes from "./contact-form.module.css";
-
+import Notification from "../ui/notification";
+async function sendContactData(contactDetails) {
+  const res = await fetch("/api/contact", {
+    method: "POST",
+    body: JSON.stringify(contactDetails),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || "Something went wrong!");
+  }
+}
 export default function ContactForm() {
   const [enteredEmail, setEnteredEmail] = useState("");
   const [enteredName, setEnteredName] = useState("");
   const [enteredMessage, setEnteredMessage] = useState("");
-  function sendMessageHandler(event) {
+  const [requestStatus, setRequestStatus] = useState();
+  const [requestError, setRequestError] = useState();
+  async function sendMessageHandler(event) {
     event.preventDefault();
-    fetch("/api/contact", {
-      method: "POST",
-      body: JSON.stringify({
+    setRequestStatus("pending");
+    try {
+      await sendContactData({
         email: enteredEmail,
         name: enteredName,
         message: enteredMessage,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+      });
+    } catch (error) {
+      setRequestError(error.message);
+      setRequestStatus("error");
+    }
+    setRequestStatus("success");
+  }
+  let notification;
+  if (requestStatus === "pending") {
+    notification = {
+      status: "pending",
+      title: "Sending Message...",
+      message: "Your message is on it's way!",
+    };
+  }
+  if (requestStatus === "success") {
+    notification = {
+      status: "success",
+      title: "Success1",
+      message: "Message sent successfully",
+    };
+  }
+  if (requestStatus === "error") {
+    notification = {
+      status: "error",
+      title: "Error!",
+      message: requestError,
+    };
   }
   return (
     <section className={classes.contact}>
@@ -59,6 +97,13 @@ export default function ContactForm() {
           <button>Send Message</button>
         </div>
       </form>
+      {notification && (
+        <Notification
+          status={notification.status}
+          title={notification.title}
+          message={notification.message}
+        />
+      )}
     </section>
   );
 }
