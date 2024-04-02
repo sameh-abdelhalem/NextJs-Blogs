@@ -45,6 +45,9 @@ export default function ContactForm() {
       setRequestStatus("error");
     }
     setRequestStatus("success");
+    setEnteredMessage("");
+    setEnteredEmail("");
+    setEnteredName("");
   }
   let notification;
   if (requestStatus === "pending") {
